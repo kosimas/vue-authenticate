@@ -161,6 +161,19 @@ export default {
       popupOptions: { width: 500, height: 560 }
     },
 
+    discord: {
+      name: 'discord',
+      url: '/auth/discord',
+      authorizationEndpoint: 'https://discordapp.com/api/oauth2/authorize',
+      redirectUri: getRedirectUri(),
+      requiredUrlParams: ['scope'],
+      scope: ['identify', 'guilds'],
+      scopeDelimiter: ' ',
+      display: 'popup',
+      oauthType: '2.0',
+      popupOptions: { width: 580, height: 400 }
+    },
+
     oauth1: {
       name: null,
       url: '/auth/oauth1',
