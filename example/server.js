@@ -7,15 +7,12 @@ var config = require('./config.json')
 var OAuth = require('oauth')
 var timestamp = require('unix-timestamp')
 var oauthSignature = require('oauth-signature')
+var path = require('path')
 
 var app = express()
 app.use(cors())
 app.use(bodyParser.json())
 // app.use(allowCrossDomain);
-
-app.get('/', function (req, res) {
-  res.send('vue-authenticate')
-})
 
 app.post('/auth/:provider', function(req, res){
   switch(req.params.provider) {
@@ -43,6 +40,9 @@ app.post('/auth/:provider', function(req, res){
     case 'live':
       liveAuth(req, res)
       break
+    case 'discord':
+        discordAuth(req, res)
+        break
     case 'login':
       loginAuth(req, res)
       break
@@ -54,6 +54,9 @@ app.post('/auth/:provider', function(req, res){
       break
   }
 });
+
+app.use(express.static(path.join(__dirname, '')));
+app.get(/.*/, (req, res) => res.sendFile(__dirname + '/index.html'));
 
 app.listen(4000, 'localhost');
 
@@ -327,6 +330,35 @@ function twitterAuth(req, res) {
       }
     })
   }
+}
+
+function discordAuth(req, res) {
+  Request({
+    method: 'post',
+    url: 'https://discordapp.com/api/oauth2/token',
+    form: {
+      client_id: config.auth.discord.clientId,
+      client_secret: config.auth.discord.clientSecret,
+      code: req.body.code,
+      redirect_uri: req.body.redirectUri,
+      grant_type: 'authorization_code',
+      scope: 'identify guilds'
+    },
+    headers: {
+      'content-type': 'application/x-www-form-urlencoded'
+    }
+  }, function (err, response, body) {
+    try {
+      if (!err && response.statusCode === 200) {
+        var responseJson = JSON.parse(body)
+        res.json(responseJson)
+      } else {
+        res.status(response.statusCode).json(err)
+      }
+    } catch (e) {
+      res.status(500).json(err || e)
+    }
+  })
 }
 
 function parseQueryString(str) {

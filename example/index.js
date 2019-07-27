@@ -6,7 +6,10 @@ Vue.use(VueAuthenticate, {
   baseUrl: 'http://localhost:4000',
   storageType: 'cookieStorage',
   providers: {
-    // Define OAuth providers config
+    /* discord: {
+      clientId: '',
+      redirectUri: 'http://localhost:4000/auth/discord'
+    } */
   }
 })
 
@@ -48,6 +51,10 @@ var router = new VueRouter({
             <button @click="auth('bitbucket')" class="button--bitbucket">Auth bitbucket</button>
             <button @click="auth('linkedin')" class="button--linkedin">Auth LinkedIn</button>
             <button @click="auth('live')" class="button--live">Auth Live</button>
+
+            <hr />
+
+            <button @click="auth('discord')" class="button--live">Auth Discord</button>
 
             <pre class="response" v-if="response !== null">{{JSON.stringify(response, null, 2)}}</pre>
           </div>
@@ -137,6 +144,18 @@ var router = new VueRouter({
                 this_.response = authResponse
               } else if (provider === 'live') {
                 this_.response = authResponse
+              }else if (provider === 'discord') {
+                this_.$http.get('https://discordapp.com/api/users/@me', {
+                  params: { access_token: this_.$auth.getToken() }
+                }).then(function (response) {
+                  var profile = response.data;
+                  this_.$http.get('https://discordapp.com/api/users/@me/guilds', {
+                    params: { access_token: this_.$auth.getToken() }
+                  }).then(response => {
+                    profile.guilds = response.data;
+                    this_.response = profile;
+                  });
+                });
               }
             }).catch(function (err) {
               this_.isAuthenticated = this_.$auth.isAuthenticated()
